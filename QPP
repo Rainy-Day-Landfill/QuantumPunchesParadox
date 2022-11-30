@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+import random
+
+# number of iterations to run
+num_cycles = 1000
+
+# how many bunkers does the enemy have?
+num_bunkers = 3
+
+# all but one enemy bunker has just goats
+goats = "goats"
+
+# one enemy bunker has nukes that they really shouldn't have!
+nukes = "nukes"
+
+
+# populate n number of bunkers with GOATS,
+# with the exception one bunker that has nukes
+# return an array representing the contents of the bunkers
+def populate_bunkers( num_bunkers=num_bunkers ):
+    # create an empty set of bunkers
+    enemy_bunkers = [None] * num_bunkers
+
+    # randomly select a position for the required nuke
+    nuke_bunker_id = random.randint( 0, len( enemy_bunkers ) -1 )
+
+    # iterate through all the enemy bunkers
+    for elem in range( len( enemy_bunkers ) ):
+        # if not the nuke bunker:
+        if elem != nuke_bunker_id:
+            # then goats:
+            enemy_bunkers[elem] = goats
+        else:
+            # otherwise it's a nuke
+            enemy_bunkers[elem] = nukes
+
+    # return the populated enemy bunkers
+    return enemy_bunkers
+
+
+# iterate through bunkers to find the nuke
+# return with the bunker ID of the nukes
+def find_nuclear_bunker( enemy_bunkers ):
+    # find the nuke
+    for current_position in range( len( enemy_bunkers ) ):
+        if enemy_bunkers[current_position] == nukes:
+            nuke_pos = current_position
+    return nuke_pos
+
+
+# choose a random bunker site
+def choose_random_bunker( enemy_bunkers ):
+    # selection is an integer representing a random element in the enemy_bunkers array
+    selection = random.randint( 0, len( enemy_bunkers ) - 1)
+    return selection
+
+
+# the enemy agreed to an inspection to slow us down:
+# -- choose a random bunker that isn't the one with nukes or the suspected site
+def inspect_enemy_bunker( suspected_bunker, enemy_bunkers ):
+    nuke_bunker_id = find_nuclear_bunker(enemy_bunkers)
+
+    # randomly choose bunkers until you've got one that isn't
+    # the nuke or the suspected bunker
+    allowed_inspection_site = choose_random_bunker(enemy_bunkers)
+    while ( allowed_inspection_site == nuke_bunker_id ) or (allowed_inspection_site == suspected_bunker):
+        allowed_inspection_site = choose_random_bunker(enemy_bunkers)
+    return allowed_inspection_site
+
+
+# checks if changing which bunker to strike would increase the chance of selecting the nuclear bunker
+def switching_improves_chances( suspected_bunker, enemy_bunkers, inspected_enemy_bunker ):
+    # determine the nuke position
+    nuclear_bunker = find_nuclear_bunker(enemy_bunkers)
+
+    # if the nuclear bunker is the one we suspected already, then no, switching after inspection
+    # would choose the wrong bunker to strike
+    if suspected_bunker == nuclear_bunker:
+        return False
+
+    # check if a random selection of one of the remaining bunkers would get the nuclear bunker
+    # -- it's not the one we inspected or they wouldn't have let us inspect it
+    # -- new_selection is a probability comparison against suspected_bunker, so don't select suspected_bunker
+    # -- as we are determining if SWITCHING targeted bunkers yields a probabilistic advantage after inspection
+    new_selection = choose_random_bunker( enemy_bunkers )
+    while ( new_selection == inspected_enemy_bunker ) or ( new_selection == suspected_bunker ):
+        new_selection = choose_random_bunker( enemy_bunkers )
+
+    if new_selection == nuclear_bunker:
+        return True
+
+
+    # the enemy wouldn't select a nuclear bunker for us to inspect
+    # if our initial selection was a goat bunker, then switching would improve chances as the remaining set would
+    # contain a nuke
+    # the remaining bunker(s) would need to contain the nuke as a set
+    # assume all other cases besides initially selecting the nuke improves chances
+
+
+# play the game a set number of times, yielding the result of whether switching bunkers after inspection
+# caused us to find the nuclear bunker
+def wargame_iteration( num_cycles ):
+    for cycle in range(0, num_cycles):
+        print("------------------------------------------------------")
+        print(" Iteration: {0}".format(cycle))
+        print("------------------------------------------------------")
+
+        enemy_bunkers = populate_bunkers()
+        print( "Enemy Bunkers:\t\t{0}".format( enemy_bunkers ) )
+
+        suspected_bunker = choose_random_bunker( enemy_bunkers )
+        print( "Suspected Bunker:\t'{0}'. ({1})".format( suspected_bunker + 1, enemy_bunkers[suspected_bunker] ) )
+
+        allowed_inspection_site = inspect_enemy_bunker( suspected_bunker, enemy_bunkers )
+        print( "Inspected Bunker:\t'{0}'. ({1})".format( allowed_inspection_site + 1, enemy_bunkers[allowed_inspection_site] ))
+
+        nuke_site = find_nuclear_bunker( enemy_bunkers )
+        print("Nuclear Bunker:\t\t'{0}'".format(nuke_site))
+
+        # after the inspection comes back clean, does switching which bunker we suspect actually improve our accuracy?
+        would_switching_improve = switching_improves_chances( suspected_bunker, enemy_bunkers, allowed_inspection_site )
+        print("Switching targets after inspection found nukes:\t{0}".format(would_switching_improve))
+
+        yield would_switching_improve
+
+def main():
+    switch_success = 0
+    switch_failure = 0
+    print("-")
+    print("******************************************************")
+    print(" The Quantum Punches Paradox Battery")
+    print("******************************************************")
+    for result in wargame_iteration(num_cycles=num_cycles):
+        if result:
+            switch_success += 1
+        else:
+            switch_failure += 1
+
+    print("-")
+    print("******************************************************")
+    print(" Quantum Punches Paradox Battery Results:")
+    print("******************************************************")
+    print("This battery repeatedly cycles through a scenario ")
+    print(f"where an enemy has {num_bunkers} bunkers. All of")
+    print(f"those bunkers are filled with {goats}, with the")
+    print(f"exception of one enemy bunker that has {nukes}.")
+    print()
+    print(f"In the scenario, all the bunkers would have an equal")
+    print("strategic viability of being the nuclear bunker.")
+    print()
+    print("You are lacking concrete intelligence to know which")
+    print("bunker has the nukes or could have the nukes.")
+    print()
+    print("A random bunker is selected to be a suspected ")
+    print("nuclear bunker.  The enemy is aware of which.  You")
+    print("plan to carry out an air strike on it, and have the")
+    print("resources for only one air strike.")
+    print()
+    print("Being aware of your plans, the enemy allows you to")
+    print("inspect one of their bunkers to slow you down.  It is")
+    print("not the nuclear bunker, nor is it the one you suspect")
+    print("of being the nuclear bunker.")
+    print()
+    print("However, this presents an opportunity.  Apparently, ")
+    print("changing which bunker you plan to air strike after")
+    print("inspection of a non-nuclear bunker increases your ")
+    print("probability of striking the correct bunker.")
+    print()
+    print("Switching targets after inspection found nukes '{0}' times out of {2}, with a success rate of {1}%.".format( switch_success, switch_success / num_cycles * 100, num_cycles ) )
+    print("Switching targets after inspection failed to find nukes '{0}' times out of {2}, with a failure rate of {1}%.".format( switch_failure, switch_failure / num_cycles * 100, num_cycles ) )
+    print()
+
+
+if __name__=='__main__':
+    main()
