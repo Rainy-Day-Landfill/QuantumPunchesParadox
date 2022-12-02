@@ -92,6 +92,7 @@ def switching_improves_chances( suspected_bunker, enemy_bunkers, inspected_enemy
     # contain a nuke
     # the remaining bunker(s) would need to contain the nuke as a set
     # assume all other cases besides initially selecting the nuke improves chances
+    return True
 
 
 # play the game a set number of times, yielding the result of whether switching bunkers after inspection
