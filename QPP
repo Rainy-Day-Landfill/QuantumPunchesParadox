@@ -86,9 +86,6 @@ def switching_improves_chances( suspected_bunker, enemy_bunkers, inspected_enemy
     while ( new_selection == inspected_enemy_bunker ) or ( new_selection == suspected_bunker ):
         new_selection = choose_random_bunker( enemy_bunkers )
 
-    if new_selection == nuclear_bunker:
-        return True
-
 
     # the enemy wouldn't select a nuclear bunker for us to inspect
     # if our initial selection was a goat bunker, then switching would improve chances as the remaining set would
